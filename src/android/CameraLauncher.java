@@ -95,6 +95,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private boolean useNativeInterface;     // Decide whether we use an intent based on MediaStore.ACTION_IMAGE_CAPTURE or on the "native" camera activity
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -134,6 +135,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+            // no popoveroptions for android!
+            // no camera direction for android!
+            this.useNativeInterface = args.getBoolean(12);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -210,9 +214,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.numPics = queryImgDB(whichContentStore()).getCount();
 
         // Let's use the intent and see what happens
-        Intent intent = new Intent(this.cordova.getActivity().getApplicationContext(), CameraActivity.class);
-        //Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
+        Intent intent = null;
+        if(useNativeInterface)
+        {
+        	intent = new Intent(this.cordova.getActivity().getApplicationContext(), CameraActivity.class);
+        } else {
+        	intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        }
+        
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
         intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(photo));
